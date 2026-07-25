@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ایما | دستیار هوشمند معلم ریاضی</title>
+    
+     <link href="https://cdn.jsdelivr.net/npm/vazirmatn@33.0.3/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.3/tailwindcss.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
+                    colors: { primary: '#3b82f6', secondary: '#0f172a', accent: '#10b981' }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Loader Animation */
+        .loader { border-top-color: #3b82f6; -webkit-animation: spinner 1.5s linear infinite; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 10px; }
+        .toast { min-width: 250px; padding: 12px 20px; border-radius: 8px; color: white; opacity: 0; transform: translateY(20px); animation: slideIn 0.3s forwards; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; font-size: 0.9rem;}
+        .toast.success { background-color: #10b981; }
+        .toast.error { background-color: #ef4444; }
+        .toast.info { background-color: #3b82f6; }
+        @keyframes slideIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
+
+        /* -------------------------------------------------------------
+           تنظیمات فوق‌پیشرفته و ایزوله مخصوص خروجی PDF (برگرفته از نسخه ۱)
+           ------------------------------------------------------------- */
+        
+        /* جلوگیری از شکستن فرمول‌ها در گزینه‌ها در خروجی */
+        #pdf-content-area mjx-container[display="true"] {
+            display: inline-block !important;
+            margin: 0 !important;
+        }
+
+        @media print {
+            /* ۱. حذف تمام عناصر اضافه سایت */
+            body * { visibility: hidden; }
+            
+            /* ۲. فقط باکس سوالات چاپ شود */
+            #pdf-content-area, #pdf-content-area * { visibility: visible; }
+            
+            #pdf-content-area {
+                position: absolute;
+                left: 0; top: 0;
+                width: 100% !important; max-width: 100% !important;
+                box-shadow: none !important; border: none !important; padding: 0 !important;
+                direction: rtl !important; color: #000 !important;
+                background: #fff !important;
+            }
+
+            /* ۳. حذف کلید پاسخ‌ها در PDF */
+            .teacher-answer-key { display: none !important; visibility: hidden !important; }
+
+            /* ۴. جلوگیری از تکه‌تکه شدن یک سوال */
+            .q-item { page-break-inside: avoid !important; break-inside: avoid !important; }
+
+            /* ۵. تنظیمات حاشیه صفحه A4 */
+            @page { size: A4 portrait; margin: 15mm 10mm; }
+            
+            body { padding: 0; margin: 0; background: #fff; }
+
+            .teacher-answer-key { 
+                    display: none !important; 
+                    visibility: hidden !important; 
+            }
+        @media print {
+                body * { visibility: hidden; }
+                #pdf-content-area, #pdf-content-area * { visibility: visible; }
+                #pdf-content-area { position: absolute; left: 0; top: 0; width: 100%; }
+
+                /* این خط پاسخ‌ها را در چاپ حذف می‌کند */
+                .teacher-answer-key { 
+                    display: none !important; 
+                }
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-slate-900 text-white flex flex-col transition-all duration-300 z-20 shadow-xl shrink-0">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-700/50">
+            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-xl shadow-lg shadow-blue-500/30">
+                <i class="fas fa-square-root-variable"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">ایمـــا</h1>
+                <p class="text-xs text-slate-400">دستیار معلم ریاضی</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto">
+            <button onclick="switchTab('tab-chat', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn bg-blue-600 text-white shadow-md">
+                <i class="fas fa-comments text-lg w-5"></i> همفکری با هوش مصنوعی
+            </button>
+            <button onclick="switchTab('tab-lesson-plan', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn">
+                <i class="fas fa-chalkboard text-lg w-5"></i> طرح درس هوشمند
+            </button>
+            <button onclick="switchTab('tab-ai-generator', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn">
+                <i class="fas fa-file-signature text-lg w-5"></i> طراحی آزمون چندبخشی
+            </button>
+            
+            <button onclick="switchTab('tab-bank', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn">
+                <i class="fas fa-database text-lg w-5"></i> بانک سوالات همگانی
+            </button>
+
+            <button onclick="switchTab('tab-formula-bank', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn">
+                <i class="fas fa-book-open text-lg w-5"></i> بانک فرمول‌های ریاضی
+            </button>
+            <button onclick="switchTab('tab-formula', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn">
+                <i class="fas fa-superscript text-lg w-5"></i> آزمایشگاه (LaTeX)
+            </button>
+            <button onclick="switchTab('tab-export', this)" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all tab-btn">
+                <i class="fas fa-print text-lg w-5"></i> بایگانی و چاپ
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700/50">
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-bold">
+                <i class="fas fa-sign-out-alt"></i> خروج
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between shrink-0 z-10">
+            <h2 id="page-title" class="text-xl font-bold text-slate-800">همفکری با هوش مصنوعی</h2>
+            <div class="flex items-center gap-4">
+                <div class="text-left hidden md:block">
+                    <div class="font-bold text-slate-700 text-sm" id="teacher-name">استاد گرامی</div>
+                    <div class="text-xs text-slate-500" id="current-date">...</div>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-100 border-2 border-blue-500 flex items-center justify-center text-blue-500 overflow-hidden shadow-sm">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-6 relative">
+            
+            <div id="tab-chat" class="tab-content block h-full flex flex-col max-w-5xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+                    <div class="bg-slate-50 border-b border-slate-100 p-4 flex gap-3 items-center">
+                        <i class="fas fa-robot text-blue-500 text-xl"></i>
+                        <div>
+                            <h3 class="font-bold text-slate-700 text-sm">دستیار حل مسئله و ایده‌پردازی</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-slate-50/50" id="chat-container">
+                        <div class="flex items-start gap-3 w-3/4">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0"><i class="fas fa-robot text-sm"></i></div>
+                            <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tr-none shadow-sm text-sm text-slate-700 leading-relaxed">
+                                سلام همکار گرامی! چطور می‌توانم امروز در تدریس ریاضی به شما کمک کنم؟ برای فرمول‌ها از <code>$$ فرمول $$</code> استفاده کنید.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-white border-t border-slate-200">
+                        <div class="flex items-center gap-2 bg-slate-100 rounded-xl p-2 border border-transparent focus-within:border-blue-400 focus-within:bg-white transition-all shadow-inner">
+                            <input type="text" id="chat-input" class="flex-1 bg-transparent border-none outline-none text-sm px-2 text-slate-700 placeholder-slate-400" placeholder="تایپ کنید..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                            <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white w-10 h-10 rounded-lg flex items-center justify-center transition-colors shadow-md">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-lesson-plan" class="tab-content hidden max-w-5xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-xl"><i class="fas fa-chalkboard-user"></i></div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">تولید طرح درس هوشمند و جامع</h3>
+                            <p class="text-sm text-slate-500">طراحی دقیق اهداف، فعالیت‌ها، ارزشیابی و زمان‌بندی</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">مبحث درس</label>
+                            <input type="text" id="lp-topic" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-sm" placeholder="مثال: قضیه فیثاغورس">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">مقطع تحصیلی</label>
+                            <select id="lp-grade" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none text-sm bg-white">
+                                <option value="هشتم">پایه هشتم</option>
+                                <option value="نهم">پایه نهم</option>
+                                <option value="دهم">پایه دهم</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">زمان کلاس (دقیقه)</label>
+                            <input type="number" id="lp-time" value="90" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none text-sm">
+                        </div>
+                    </div>
+                    
+                    <button onclick="generateLessonPlan()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-md w-full md:w-auto">
+                        <i class="fas fa-wand-magic-sparkles"></i> طراحی سناریوی تدریس
+                    </button>
+
+                    <div id="lp-loading" class="hidden mt-8 text-center text-indigo-600">
+                        <div class="inline-block w-8 h-8 border-4 rounded-full loader mb-2"></div>
+                        <p class="font-medium">در حال نگارش طرح درس...</p>
+                    </div>
+
+                    <div id="lp-result" class="hidden mt-8 p-6 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                </div>
+            </div>
+
+            <div id="tab-ai-generator" class="tab-content hidden max-w-5xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+                        <div class="w-10 h-10 bg-teal-100 text-teal-600 rounded-lg flex items-center justify-center text-xl"><i class="fas fa-file-signature"></i></div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">طراحی آزمون هوشمند چندبخشی</h3>
+                            <p class="text-sm text-slate-500">طراحی انواع سوال (تستی، جای‌خالی، مفهومی و ...)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">مبحث یا فصل</label>
+                            <input type="text" id="ai-topic" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none text-sm" placeholder="مثلاً: اتحادها">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">نوع سوال</label>
+                            <select id="ai-type" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none text-sm bg-white">
+                                <option value="test">چهارگزینه‌ای</option>
+                                <option value="blank">جای خالی</option>
+                                <option value="tf">درست / غلط</option>
+                                <option value="match">وصل کردنی</option>
+                                <option value="concept">تشریحی (مفهومی)</option>
+                                <option value="compute">محاسباتی (مرحله‌ای)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">سطح و تعداد</label>
+                            <div class="flex gap-2">
+                                <select id="ai-level" class="w-1/2 px-2 py-2.5 rounded-xl border border-slate-300 outline-none text-sm bg-white">
+                                    <option value="easy">آسان</option>
+                                    <option value="medium" selected>متوسط</option>
+                                    <option value="hard">سخت</option>
+                                </select>
+                                <input type="number" id="ai-count" class="w-1/2 px-2 py-2.5 rounded-xl border border-slate-300 outline-none text-sm text-center" value="3" min="1" max="10">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="generateQuestionsAI()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-md">
+                            <i class="fas fa-bolt"></i> شروع طراحی
+                        </button>
+                        <button id="download-pdf-btn" onclick="downloadQuestionsPDF()" class="hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2 shadow-md">
+                            <i class="fas fa-file-pdf"></i> چاپ / PDF 
+                        </button>
+                    </div>
+
+                    <div id="ai-loading" class="hidden mt-8 text-center text-teal-600">
+                        <div class="inline-block w-8 h-8 border-4 rounded-full loader mb-2" style="border-top-color: #0d9488;"></div>
+                        <p class="font-medium">در حال تولید سوالات ریاضی و رندر فرمول‌ها...</p>
+                    </div>
+
+                    <div id="ai-generation-result" class="hidden mt-8" style="background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; max-height: 600px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <div id="tab-bank" class="tab-content hidden max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 h-fit">
+                        <h3 class="text-base font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                            <i class="fas fa-plus-circle text-blue-500"></i> افزودن سوال جدید به بانک همگانی
+                        </h3>
+                        <div class="space-y-4 text-xs">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">متن سوال (فرمول‌ها داخل \\( \\) یا $$ $$)</label>
+                                <textarea id="qb-content" rows="3" class="w-full p-2.5 rounded-xl border border-slate-300 outline-none focus:border-blue-500" placeholder="مثال: حاصل عبارت \\( x^2 - 4 \\) چیست؟"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">مبحث (دسته بندی)</label>
+                                    <input type="text" id="qb-category" class="w-full p-2.5 rounded-xl border border-slate-300 outline-none" placeholder="اتحادها">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-slate-700 mb-1">سطح سختی</label>
+                                    <select id="qb-difficulty" class="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
+                                        <option value="easy">آسان</option>
+                                        <option value="medium" selected>متوسط</option>
+                                        <option value="hard">سخت</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">پاسخ صحیح (کلید)</label>
+                                <input type="text" id="qb-correct" class="w-full p-2.5 rounded-xl border border-slate-300 outline-none" placeholder="پاسخ نهایی">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">توضیح/درسنامه مختصر (اختیاری)</label>
+                                <textarea id="qb-explanation" rows="2" class="w-full p-2.5 rounded-xl border border-slate-300 outline-none" placeholder="راه حل تشریحی..."></textarea>
+                            </div>
+                            <button onclick="addManualQuestion()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-sm">
+                                <i class="fas fa-save"></i> ثبت در بانک سوالات پلتفرم
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col max-h-[700px]">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-800">بانک سوالات اشتراکی ایما</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">اشتراک‌گذاری تصاعدی سوالات بین تمام دبیران سراسر کشور</p>
+                            </div>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <input type="text" id="bank-search-input" class="p-2 border border-slate-300 rounded-xl text-xs outline-none focus:border-emerald-500 w-full sm:w-48" placeholder="فیلتر بر اساس مبحث...">
+                                <button onclick="loadGlobalQuestions()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1 shrink-0">
+                                    <i class="fas fa-search"></i> جستجو
+                                </button>
+                            </div>
+                        </div>
+                <button onclick="exportSelectedQuiz()" class="mb-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-md">
+                    <i class="fas fa-file-pdf"></i> ساخت آزمون از سوالات انتخاب شده
+                </button>
+
+                        <div id="global-bank-results" class="flex-1 overflow-y-auto space-y-4 pr-1">
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="tab-formula-bank" class="tab-content hidden max-w-6xl mx-auto flex-col h-full">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col flex-1 overflow-hidden">
+                    
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 border-b border-slate-100 pb-4 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xl"><i class="fas fa-book-open"></i></div>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800">بانک جامع فرمول‌های ریاضی</h3>
+                                <p class="text-sm text-slate-500">دسترسی سریع به ده‌ها فرمول، الگو و نکته</p>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full md:w-1/3 relative">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-slate-400"></i>
+                            </div>
+                            <input type="text" id="formula-search" oninput="filterFormulas()" class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all text-sm bg-slate-50" placeholder="جستجوی فرمول (مثلاً: مساحت، توان، اتحاد...)">
+                        </div>
+                    </div>
+
+                    <div id="formula-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto flex-1 pr-2 pb-10">
+                        </div>
+
+                    <div id="no-formulas-msg" class="hidden flex-col items-center justify-center py-10 text-slate-400 w-full h-full">
+                        <i class="fas fa-search-minus text-4xl mb-3"></i>
+                        <p>فرمولی با این عبارت پیدا نشد.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="tab-formula" class="tab-content hidden max-w-5xl mx-auto h-full">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+                    <div class="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4 shrink-0">
+                        <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center text-xl"><i class="fas fa-superscript"></i></div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">آزمایشگاه فرمول و کدساز LaTeX</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+                        <div class="flex-1 flex flex-col">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">ویرایشگر LaTeX</label>
+                            <textarea id="latex-input" class="w-full flex-1 p-4 rounded-xl border border-slate-300 outline-none text-left font-mono text-sm bg-slate-50 resize-none" dir="ltr" placeholder="\int_{a}^{b} x^2 dx = \frac{b^3 - a^3}{3}">\int_{a}^{b} x^2 dx = \frac{b^3 - a^3}{3}</textarea>
+                        </div>
+                        <div class="flex-1 flex flex-col">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">پیش‌نمایش خروجی ریاضی</label>
+                            <div class="w-full flex-1 p-6 rounded-xl border-2 border-dashed border-slate-300 bg-white flex items-center justify-center overflow-auto text-2xl" id="latex-preview" dir="ltr">
+                                $$ \int_{a}^{b} x^2 dx = \frac{b^3 - a^3}{3} $$
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-export" class="tab-content hidden max-w-5xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">آزمون‌های بایگانی شده</h3>
+            <div id="quiz-archive-list" class="mb-6 border border-slate-100 rounded-xl">
+                </div>
+            
+            <div class="flex gap-4 items-end">
+                <div class="flex-1">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">شناسه آزمون (Quiz ID)</label>
+                    <input type="number" id="export-quiz-id" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 outline-none">
+                </div>
+                <button onclick="exportQuiz(false)" class="bg-gray-800 text-white font-bold py-2.5 px-6 rounded-xl">چاپ PDF</button>
+            </div>
+        </div>
+    </div>
+
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const today = new Date().toLocaleDateString('fa-IR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        document.getElementById('current-date').innerText = today;
+
+        const BACKEND_URL = "http://localhost:8000";
+        const token = localStorage.getItem("ima_token");
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            toast.innerHTML = `<i class="fas ${icon} text-lg"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(el => { el.classList.add('hidden'); el.classList.remove('block'); });
+            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); el.classList.add('text-slate-300'); });
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            element.classList.remove('text-slate-300');
+            element.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            document.getElementById("page-title").innerText = element.innerText.trim();
+        }
+
+        function renderMath(elementId = null) {
+            if (window.MathJax) {
+                if (elementId) {
+                    const el = document.getElementById(elementId);
+                    MathJax.typesetPromise([el]).catch((err) => console.log(err.message));
+                } else {
+                    MathJax.typesetPromise().catch((err) => console.log(err.message));
+                }
+            }
+        }
+
+    async function sendMessage() {
+            const input = document.getElementById("chat-input");
+            const text = input.value.trim();
+            if(!text) return;
+
+            const container = document.getElementById("chat-container");
+            
+            // User Message HTML
+            container.innerHTML += `
+                <div class="flex items-start gap-3 w-3/4 mr-auto flex-row-reverse">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0"><i class="fas fa-user text-sm"></i></div>
+                    <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm leading-relaxed" dir="rtl">${text}</div>
+                </div>
+            `;
+            input.value = "";
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                    body: JSON.stringify({ messages: [{ role: "user", content: text }], temperature: 0.5 })
+                });
+                
+                if(!response.ok) throw new Error('خطا در سرور');
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+                
+                // Assistant Message HTML
+                container.innerHTML += `
+                    <div class="flex items-start gap-3 w-3/4">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0"><i class="fas fa-robot text-sm"></i></div>
+                        <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tr-none shadow-sm text-sm text-slate-700 leading-relaxed">${reply}</div>
+                    </div>
+                `;
+            } catch (e) {
+                // Fallback for UI testing if backend is off
+                setTimeout(() => {
+                    container.innerHTML += `
+                        <div class="flex items-start gap-3 w-3/4">
+                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0"><i class="fas fa-exclamation-triangle text-sm"></i></div>
+                            <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tr-none shadow-sm text-sm text-slate-700 leading-relaxed text-red-500">ارتباط با سرور برقرار نشد. (محیط آزمایشی)</div>
+                        </div>
+                    `;
+                    container.scrollTop = container.scrollHeight;
+                }, 1000);
+            }
+            container.scrollTop = container.scrollHeight;
+            renderMath();
+        }
+
+        async function generateLessonPlan() {
+    const topic = document.getElementById('lp-topic').value;
+    const grade = document.getElementById('lp-grade').value;
+    const time = document.getElementById('lp-time').value;
+    
+    if(!topic) { showToast('لطفاً مبحث درس را وارد کنید', 'error'); return; }
+    
+    document.getElementById('lp-loading').classList.remove('hidden');
+    document.getElementById('lp-result').classList.add('hidden');
+
+    try {
+        const formData = new FormData();
+        formData.append("topic", topic);
+        formData.append("grade", grade);
+        formData.append("time", time);
+
+        const res = await fetch(`${BACKEND_URL}/api/teacher/lesson-plan/generate`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+        });
+        
+        const data = await res.json();
+        document.getElementById('lp-loading').classList.add('hidden');
+        
+        if (!res.ok) throw new Error(data.detail || "خطا در ارتباط با سرور");
+        
+        document.getElementById('lp-result').classList.remove('hidden');
+        
+        // تزریق دیتای واقعی هوش مصنوعی به قالب گرافیکی
+        document.getElementById('lp-result').innerHTML = `
+            <div class="border-b border-slate-200 pb-4 mb-6">
+                <h2 class="text-2xl font-bold text-indigo-700">طرح درس جامع: ${topic}</h2>
+                <div class="flex gap-4 mt-2 text-sm text-slate-600">
+                    <span><i class="fas fa-clock text-indigo-400"></i> ${time} دقیقه</span>
+                    <span><i class="fas fa-users text-indigo-400"></i> ${grade}</span>
+                </div>
+            </div>
+            <div class="space-y-6 text-slate-800 text-sm">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-r-4 border-r-blue-500">
+                    <h4 class="font-bold text-blue-700 text-base mb-2"><i class="fas fa-bullseye"></i> اهداف آموزشی</h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        ${data.goals.map(g => `<li>${g}</li>`).join('')}
+                    </ul>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-r-4 border-r-amber-500">
+                    <h4 class="font-bold text-amber-600 text-base mb-2"><i class="fas fa-lightbulb"></i> ارزشیابی آغازین و ایجاد انگیزه</h4>
+                    <p class="text-slate-600 text-justify leading-relaxed">${data.intro}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-r-4 border-r-emerald-500">
+                    <h4 class="font-bold text-emerald-600 text-base mb-2"><i class="fas fa-chalkboard-teacher"></i> فعالیت کلاسی و تدریس</h4>
+                    <p class="text-slate-600 text-justify leading-relaxed mb-3">${data.activity}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-r-4 border-r-purple-500">
+                    <h4 class="font-bold text-purple-600 text-base mb-2"><i class="fas fa-check-double"></i> ارزشیابی پایانی</h4>
+                    <p class="text-slate-600 leading-relaxed">${data.evaluation}</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-r-4 border-r-rose-500">
+                    <h4 class="font-bold text-rose-600 text-base mb-2"><i class="fas fa-home"></i> تکلیف خانه</h4>
+                    <p class="text-slate-600 leading-relaxed">${data.homework}</p>
+                </div>
+            </div>
+        `;
+        renderMath('lp-result');
+        showToast('طرح درس جامع تولید شد', 'success');
+        
+    } catch(e) {
+        document.getElementById('lp-loading').classList.add('hidden');
+        showToast(e.message, 'error');
+    }
+}
+async function generateQuestionsAI() {
+    const category = document.getElementById("ai-topic").value.trim();
+    const difficulty = document.getElementById("ai-level").value;
+    const count = parseInt(document.getElementById("ai-count").value);
+    const qType = document.getElementById("ai-type").value; // دریافت نوع سوال
+    
+    if(!category) return showToast("لطفا مبحث درس را مشخص کنید.", "error");
+    
+    const resultBox = document.getElementById("ai-generation-result");
+    const loadingBox = document.getElementById("ai-loading");
+    const pdfBtn = document.getElementById("download-pdf-btn");
+    
+    pdfBtn.classList.add("hidden");
+    resultBox.classList.add("hidden");
+    loadingBox.classList.remove("hidden");
+
+    try {
+        const formData = new FormData();
+        formData.append("category", category);
+        formData.append("difficulty", difficulty);
+        formData.append("count", count);
+        formData.append("q_type", qType); // ارسال نوع سوال به بک‌اند
+
+        const res = await fetch(`${BACKEND_URL}/api/teacher/questions/generate`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+        });
+        
+        const data = await res.json();
+        loadingBox.classList.add("hidden");
+        
+        if (!res.ok) {
+            showToast(data.detail || "خطا از سمت سرور بک‌اند", "error");
+            return;
+        }
+        
+        if(data.questions && data.questions.length > 0) {
+            renderTestPaper(data.questions, category, difficulty, qType);
+            showToast("برگه آزمون توسط هوش مصنوعی طراحی شد!", "success");
+        } else {
+            showToast("فرمت پاسخ هوش مصنوعی ساختاریافته و معتبر نبود.", "error");
+        }
+
+    } catch(e) {
+        console.error(e);
+        loadingBox.classList.add("hidden");
+        showToast("خطا در ارتباط با سرور. مطمئن شوید سرور uvicorn روشن است.", "error");
+    }
+}
+
+        function renderTestPaper(questions, category, difficulty, qType) {
+            const resultBox = document.getElementById("ai-generation-result");
+            const pdfBtn = document.getElementById("download-pdf-btn");
+            let diffText = difficulty === 'easy' ? 'آسان' : difficulty === 'medium' ? 'متوسط' : 'سخت';
+            
+            let sectionTitle = "";
+            switch(qType) {
+                case 'test': sectionTitle = "بخش اول: سوالات چهارگزینه‌ای"; break;
+                case 'blank': sectionTitle = "بخش دوم: جای خالی"; break;
+                case 'tf': sectionTitle = "بخش سوم: درست / غلط"; break;
+                case 'match': sectionTitle = "بخش چهارم: وصل کردنی"; break;
+                case 'concept': sectionTitle = "بخش پنجم: پاسخ تشریحی"; break;
+                case 'compute': sectionTitle = "بخش ششم: محاسباتی"; break;
+            }
+
+            // استفاده از استایل‌های درون‌خطی مستحکم (بر اساس نسخه اول شما) برای ثبات در چاپ PDF
+            let html = `
+            <div id="pdf-content-area" style="font-family: 'Vazirmatn', Tahoma, sans-serif; direction: rtl; padding: 25px; background: #ffffff; color: #000; width: 100%; box-sizing: border-box;">
+                
+                <div style="border: 2px solid #000; border-radius: 10px; padding: 15px; margin-bottom: 25px; background: #fff; font-size: 0; text-align: center;">
+                    <div style="display: inline-block; width: 33.33%; text-align: right; vertical-align: top; font-size: 0.95rem; line-height: 2; box-sizing: border-box; color: #000;">
+                        <div><strong>نام و نام‌خانوادگی:</strong> ...........................</div>
+                        <div style="margin-top: 8px;"><strong>کلاس / پایه:</strong> ...........................</div>
+                    </div>
+                    <div style="display: inline-block; width: 33.33%; text-align: center; vertical-align: top; font-size: 1rem; box-sizing: border-box;">
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: bold; color: #000;">آزمون ریاضیات</h2>
+                        <div style="font-size: 0.85rem; margin-top: 8px; border: 1px solid #000; display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; color: #000;">
+                            مبحث: ${category} | سطح: ${diffText}
+                        </div>
+                    </div>
+                    <div style="display: inline-block; width: 33.33%; text-align: left; vertical-align: top; font-size: 0.95rem; line-height: 2; box-sizing: border-box; color: #000;" dir="rtl">
+                        <div><strong>تاریخ آزمون:</strong> ....../....../......</div>
+                        <div style="margin-top: 8px;"><strong>مدت زمان:</strong> ........................... دقیقه</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px; font-weight: bold; font-size: 1.1rem; border-bottom: 2px solid #ccc; padding-bottom: 5px; display: flex; justify-content: space-between;">
+                    <span>${sectionTitle}</span>
+                    <span style="font-weight: normal; font-size: 0.9rem;">بارم</span>
+                </div>
+
+                <div id="questions-list-container">
+            `;
+
+            questions.forEach((q, idx) => {
+                html += `
+                    <div class="q-item" style="background: #ffffff; padding: 10px 0; margin-bottom: 20px; box-sizing: border-box; page-break-inside: avoid;">
+                        <div style="font-weight: bold; margin-bottom: 15px; font-size: 1rem; color: #000; line-height: 1.8; text-align: right;">
+                            <span style="display:inline-block; margin-left: 5px;">${idx+1}- </span> 
+                            <span style="display:inline;">${q.question}</span>
+                        </div>
+                `;
+
+                if (qType === 'test') {
+                    // استایل مستحکم Inline-block برای عدم شکستن فرمول‌ها
+                    html += `
+                        <div style="width: 100%; text-align: right; font-size: 0; box-sizing: border-box; margin-top: 10px;">
+                            <div style="display: inline-block; width: 48%; margin: 1%; text-align: right; font-size: 0.95rem; color: #000; box-sizing: border-box; vertical-align: middle;"><strong>الف)</strong> ${q.options[0]}</div>
+                            <div style="display: inline-block; width: 48%; margin: 1%; text-align: right; font-size: 0.95rem; color: #000; box-sizing: border-box; vertical-align: middle;"><strong>ب)</strong> ${q.options[1]}</div>
+                            <div style="display: inline-block; width: 48%; margin: 1%; text-align: right; font-size: 0.95rem; color: #000; box-sizing: border-box; vertical-align: middle;"><strong>ج)</strong> ${q.options[2]}</div>
+                            <div style="display: inline-block; width: 48%; margin: 1%; text-align: right; font-size: 0.95rem; color: #000; box-sizing: border-box; vertical-align: middle;"><strong>د)</strong> ${q.options[3]}</div>
+                        </div>
+                    `;
+                } 
+                else if (qType === 'tf') {
+                    html += `
+                        <div style="margin-top: 15px; font-size: 0.95rem;">
+                            <span style="border: 1px solid #000; padding: 5px 15px; margin-left: 15px; display: inline-block; border-radius: 4px;">درست ( )</span>
+                            <span style="border: 1px solid #000; padding: 5px 15px; display: inline-block; border-radius: 4px;">غلط ( )</span>
+                        </div>
+                    `;
+                }
+                else if (qType === 'concept') {
+                    html += `<div style="margin-top: 15px; height: 100px; border-bottom: 2px dashed #999; width: 100%;"></div>`;
+                }
+                else if (qType === 'compute') {
+                    html += `<div style="margin-top: 15px; height: 180px; border: 1px solid #000; border-radius: 8px; width: 100%;"></div>`;
+                }
+
+                html += `
+                    <div class="teacher-answer-key" style="margin-top: 20px; padding: 12px; background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px;">
+                        <div style="color: #1d4ed8; font-weight: bold;">🔑 کلید راهنما: ${q.correct_answer}</div>
+                        ${q.explanation ? `<div style="color: #475569; font-size: 0.85rem;">${q.explanation}</div>` : ''}
+                    </div>
+                </div> 
+                `;
+            });
+            // در انتهای حلقه سوالات در تابع renderTestPaper:
+
+
+            html += `</div></div>`;
+            resultBox.innerHTML = html;
+            resultBox.classList.remove("hidden");
+            pdfBtn.classList.remove("hidden");
+            
+            // پردازش مجدد MathJax در باکس نتیجه
+            renderMath('ai-generation-result');
+        }
+
+        function downloadQuestionsPDF() {
+            window.print();
+        }
+
+        document.getElementById('latex-input').addEventListener('input', function() {
+            const preview = document.getElementById('latex-preview');
+            preview.innerHTML = `$$ ${this.value} $$`;
+            renderMath('latex-preview');
+        });
+
+        renderMath();
+
+        // ۱. ثبت دستی سوال در بانک همگانی دیتابیس
+async function addManualQuestion() {
+    const content = document.getElementById('qb-content').value.trim();
+    const category = document.getElementById('qb-category').value.trim();
+    const difficulty = document.getElementById('qb-difficulty').value;
+    const correct_answer = document.getElementById('qb-correct').value.trim();
+    const explanation = document.getElementById('qb-explanation').value.trim();
+
+    if(!content || !category || !correct_answer) {
+        showToast("لطفاً فیلدهای اصلی (متن، مبحث و پاسخ) را پر کنید.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/teacher/questions/create`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                title: `سوال دستی - ${category}`,
+                content: content,
+                category: category,
+                difficulty: difficulty,
+                correct_answer: correct_answer,
+                explanation: explanation
+            })
+        });
+
+        if(response.ok) {
+            showToast("سوال شما با موفقیت در بانک همگانی ثبت شد!", "success");
+            // پاک کردن فرم
+            document.getElementById('qb-content').value = "";
+            document.getElementById('qb-correct').value = "";
+            document.getElementById('qb-explanation').value = "";
+            // رفرش کردن لیست سوالات
+            loadGlobalQuestions();
+        } else {
+            showToast("خطا در ذخیره‌سازی سوال.", "error");
+        }
+    } catch (e) {
+        showToast("ارتباط با سرور برقرار نشد.", "error");
+    }
+}
+
+async function loadGlobalQuestions() {
+    const searchCategory = document.getElementById('bank-search-input').value.trim();
+    const container = document.getElementById('global-bank-results');
+    container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs"><i class="fas fa-spinner fa-spin"></i> در حال فراخوانی بانک سوالات...</div>`;
+
+    let url = `${BACKEND_URL}/api/questions/global`;
+    if(searchCategory) url += `?category=${encodeURIComponent(searchCategory)}`;
+
+    try {
+        const res = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+        const questions = await res.json();
+
+        if(questions.length === 0) {
+            container.innerHTML = `<div class="text-center py-10 text-slate-400 text-xs">سوالی یافت نشد.</div>`;
+            return;
+        }
+
+        let html = "";
+questions.forEach((q, index) => {
+            let badgeColor = q.difficulty === 'easy' ? 'bg-green-100 text-green-700' : q.difficulty === 'hard' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
+            
+            // ۱. تبدیل فیلد options (که رشته JSON است) به آرایه جاوا اسکریپتی
+            let options = [];
+            try {
+                if (typeof q.options === 'string') {
+                    options = JSON.parse(q.options);
+                } else if (Array.isArray(q.options)) {
+                    options = q.options;
+                }
+            } catch (e) {
+                console.error("خطا در پارس کردن گزینه‌ها:", e);
+            }
+
+            // ۲. ساخت HTML گزینه‌ها اگر وجود داشتند
+            let optionsHtml = "";
+            if (options && options.length > 0) {
+                optionsHtml = `
+                    <div class="grid grid-cols-2 gap-2 mt-2 mb-3 text-xs">
+                        <div><span class="font-bold">الف)</span> ${options[0]}</div>
+                        <div><span class="font-bold">ب)</span> ${options[1]}</div>
+                        <div><span class="font-bold">ج)</span> ${options[2]}</div>
+                        <div><span class="font-bold">د)</span> ${options[3]}</div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs relative">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-slate-700"><i class="fas fa-hashtag text-blue-500"></i> سوال ${index + 1}</span>
+                        <div class="flex gap-2">
+                            <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold">${q.category}</span>
+                            <span class="px-2 py-0.5 rounded-full font-bold ${badgeColor}">${q.difficulty}</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-800 leading-loose text-justify font-medium mb-3 bg-white p-2 rounded-lg border border-slate-100">${q.content}</p>
+                    
+                    ${optionsHtml}
+                    
+                    <button onclick="toggleQuestionSelection(${q.id})" class="mt-2 flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors font-bold">
+                        <i class="fas fa-plus"></i> افزودن به آزمون
+                    </button>
+                    
+                    <div class="bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg mt-3">
+                        <p class="font-bold text-indigo-700 mb-1">پاسخ صحیح:</p>
+                        <p class="text-slate-700 font-semibold">${q.correct_answer}</p>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        renderMath('global-bank-results');
+    } catch (e) {
+        container.innerHTML = `<div class="text-center py-6 text-red-500">خطا در بارگذاری سوالات</div>`;
+    }
+}
+// ذخیره سبد سوالات در دیتابیس
+async function saveQuiz() {
+    if(selectedQuestionIds.length === 0) { showToast("ابتدا سوال انتخاب کن!", "error"); return; }
+    
+    const response = await fetch(`${BACKEND_URL}/api/teacher/quizzes/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+            title: "آزمون جدید " + new Date().toLocaleDateString('fa-IR'),
+            category: "عمومی",
+            question_ids: selectedQuestionIds
+        })
+    });
+    
+    if(response.ok) {
+        showToast("آزمون در بایگانی ذخیره شد!", "success");
+        loadQuizzes(); // رفرش لیست آزمون‌ها در تب بایگانی
+    }
+}
+
+// لود کردن لیست آزمون‌ها در تب بایگانی
+async function loadQuizzes() {
+    const res = await fetch(`${BACKEND_URL}/api/teacher/quizzes`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    const quizzes = await res.json();
+    const container = document.getElementById('quiz-archive-list'); // این آیدی را در HTML تب بایگانی بساز
+    
+    container.innerHTML = quizzes.map(q => `
+        <div class="flex justify-between items-center p-3 border-b border-slate-100">
+            <span>${q.title} (ID: ${q.id})</span>
+            <button onclick="document.getElementById('export-quiz-id').value=${q.id}" class="text-blue-600 text-xs font-bold">انتخاب برای چاپ</button>
+        </div>
+    `).join('');
+}
+// برای اینکه با کلیک روی تب بانک سوالات، لیست سوالات همان لحظه آپدیت شود، تابع switchTab را به این صورت کوچک ارتقا بده:
+const originalSwitchTab = switchTab;
+switchTab = function(tabId, element) {
+    originalSwitchTab(tabId, element);
+    if(tabId === 'tab-bank') {
+        loadGlobalQuestions();
+    }
+}
+        // ==========================================
+        // 📚 Massive Formula Bank Data & Logic
+        // ==========================================
+        const formulaBank = [
+            // هندسه مساحت و محیط
+            { title: "مساحت مربع", icon: "fa-square", color: "blue", formula: "S = a^2", note: "یک ضلع ضربدر خودش.", example: "S = 5^2 = 25" },
+            { title: "محیط مربع", icon: "fa-vector-square", color: "blue", formula: "P = 4a", note: "اندازه یک ضلع ضربدر چهار.", example: "P = 4(5) = 20" },
+            { title: "مساحت مستطیل", icon: "fa-rectangle-landscape", color: "blue", formula: "S = a \\times b", note: "طول ضربدر عرض.", example: "S = 4 \\times 5 = 20" },
+            { title: "محیط مستطیل", icon: "fa-draw-polygon", color: "blue", formula: "P = 2(a + b)", note: "دو برابر مجموع طول و عرض.", example: "P = 2(4 + 5) = 18" },
+            { title: "مساحت مثلث", icon: "fa-play transform -rotate-90", color: "blue", formula: "S = \\frac{a \\times h}{2}", note: "قاعده ضربدر ارتفاع تقسیم بر دو.", example: "S = \\frac{4 \\times 5}{2} = 10" },
+            { title: "مساحت متوازی‌الاضلاع", icon: "fa-clone", color: "blue", formula: "S = a \\times h", note: "قاعده ضربدر ارتفاع.", example: "S = 6 \\times 3 = 18" },
+            { title: "مساحت لوزی", icon: "fa-gem", color: "blue", formula: "S = \\frac{d_1 \\times d_2}{2}", note: "حاصل‌ضرب دو قطر تقسیم بر دو.", example: "S = \\frac{6 \\times 8}{2} = 24" },
+            { title: "مساحت ذوزنقه", icon: "fa-shapes", color: "blue", formula: "S = \\frac{(a+b)h}{2}", note: "مجموع دو قاعده ضربدر ارتفاع تقسیم بر دو.", example: "S = \\frac{(4+6)5}{2} = 25" },
+            { title: "مساحت دایره", icon: "fa-circle", color: "blue", formula: "S = \\pi r^2", note: "عدد پی ضربدر مجذور شعاع.", example: "S = \\pi (5)^2 = 25\\pi" },
+            { title: "محیط دایره", icon: "fa-circle-notch", color: "blue", formula: "P = 2 \\pi r = \\pi d", note: "قطر ضربدر عدد پی.", example: "P = 10\\pi" },
+            
+            // هندسه حجم
+            { title: "حجم مکعب", icon: "fa-cube", color: "rose", formula: "V = a^3", note: "اندازه یال به توان سه.", example: "V = 3^3 = 27" },
+            { title: "مساحت کل مکعب", icon: "fa-cubes", color: "rose", formula: "S_t = 6a^2", note: "مجموع مساحت شش وجه مربع.", example: "S_t = 6(3)^2 = 54" },
+            { title: "حجم مکعب مستطیل", icon: "fa-box", color: "rose", formula: "V = a \\times b \\times c", note: "طول ضربدر عرض ضربدر ارتفاع.", example: "V = 2 \\times 3 \\times 4 = 24" },
+            { title: "حجم منشور و استوانه", icon: "fa-database", color: "rose", formula: "V = S \\times h", note: "مساحت قاعده ضربدر ارتفاع.", example: "V = 10 \\times 5 = 50" },
+            { title: "مساحت جانبی منشور", icon: "fa-layer-group", color: "rose", formula: "S_L = P \\times h", note: "محیط قاعده ضربدر ارتفاع.", example: "S_L = 12 \\times 5 = 60" },
+            { title: "رابطه اویلر", icon: "fa-dice-d20", color: "rose", formula: "V - E + F = 2", note: "ارتباط بین تعداد رئوس(V)، یال‌ها(E) و وجوه(F).", example: "8 - 12 + 6 = 2" },
+
+            // زوایا
+            { title: "مجموع زوایای داخلی چندضلعی", icon: "fa-draw-polygon", color: "purple", formula: "S = (n - 2) \\times 180^\\circ", note: "n تعداد اضلاع است.", example: "(5-2)\\times 180 = 540" },
+            { title: "زاویه داخلی چندضلعی منتظم", icon: "fa-star", color: "purple", formula: "\\alpha = \\frac{(n - 2) \\times 180^\\circ}{n}", note: "تقسیم مجموع زوایا بر تعداد اضلاع.", example: "\\frac{540}{5} = 108^\\circ" },
+            { title: "مجموع زوایای خارجی", icon: "fa-sun", color: "purple", formula: "S_{ext} = 360^\\circ", note: "در هر چندضلعی محدب همواره ۳۶۰ درجه است.", example: "360^\\circ" },
+            { title: "قضیه فیثاغورس", icon: "fa-ruler-combined", color: "purple", formula: "c^2 = a^2 + b^2", note: "مربع وتر برابر مجموع مربعات دو ضلع دیگر.", example: "5^2 = 3^2 + 4^2" },
+
+            // توان‌ها
+            { title: "ضرب توان‌ها (پایه‌های مساوی)", icon: "fa-superscript", color: "emerald", formula: "a^m \\times a^n = a^{m+n}", note: "پایه ثابت، توان‌ها جمع می‌شوند.", example: "2^3 \\times 2^4 = 2^7" },
+            { title: "ضرب توان‌ها (توان‌های مساوی)", icon: "fa-superscript", color: "emerald", formula: "a^m \\times b^m = (ab)^m", note: "پایه‌ها ضرب می‌شوند، توان ثابت می‌ماند.", example: "2^3 \\times 5^3 = 10^3" },
+            { title: "تقسیم توان‌ها (پایه‌های مساوی)", icon: "fa-divide", color: "emerald", formula: "\\frac{a^m}{a^n} = a^{m-n}", note: "پایه ثابت، توان‌ها کم می‌شوند.", example: "2^5 \\div 2^2 = 2^3" },
+            { title: "تقسیم توان‌ها (توان‌های مساوی)", icon: "fa-divide", color: "emerald", formula: "\\frac{a^m}{b^m} = (\\frac{a}{b})^m", note: "پایه‌ها تقسیم می‌شوند، توان ثابت.", example: "10^3 \\div 2^3 = 5^3" },
+            { title: "توان صفر", icon: "fa-circle-notch", color: "emerald", formula: "a^0 = 1", note: "هر عدد غیرصفر به توان صفر برابر یک است.", example: "100^0 = 1" },
+            { title: "توان منفی", icon: "fa-minus", color: "emerald", formula: "a^{-n} = \\frac{1}{a^n}", note: "پایه معکوس شده و توان قرینه می‌شود.", example: "2^{-3} = \\frac{1}{2^3} = \\frac{1}{8}" },
+            { title: "توانِ توان", icon: "fa-angle-double-up", color: "emerald", formula: "(a^m)^n = a^{m \\times n}", note: "توان‌ها در هم ضرب می‌شوند.", example: "(2^3)^2 = 2^6" },
+
+            // جبر و اتحادها
+            { title: "اتحاد مربع دو جمله‌ای (جمع)", icon: "fa-plus-square", color: "amber", formula: "(a + b)^2 = a^2 + 2ab + b^2", note: "مربع اولی + دوبرابر اولی در دومی + مربع دومی", example: "(x+3)^2 = x^2+6x+9" },
+            { title: "اتحاد مربع دو جمله‌ای (تفاضل)", icon: "fa-minus-square", color: "amber", formula: "(a - b)^2 = a^2 - 2ab + b^2", note: "مربع اولی - دوبرابر اولی در دومی + مربع دومی", example: "(x-3)^2 = x^2-6x+9" },
+            { title: "اتحاد مزدوج", icon: "fa-people-arrows", color: "amber", formula: "(a - b)(a + b) = a^2 - b^2", note: "تفاضل مربعات دو جمله.", example: "(x-2)(x+2) = x^2-4" },
+            { title: "اتحاد جمله مشترک", icon: "fa-link", color: "amber", formula: "(x+a)(x+b) = x^2 + (a+b)x + ab", note: "مربع مشترک + (جمع غیرمشترک‌ها در مشترک) + ضرب غیرمشترک‌ها", example: "(x+2)(x+3) = x^2+5x+6" },
+            { title: "فاکتورگیری (عامل مشترک)", icon: "fa-object-group", color: "amber", formula: "ab + ac = a(b + c)", note: "پیدا کردن ب.م.م جملات و استخراج آن.", example: "3x^2 + 6x = 3x(x + 2)" },
+
+            // بردار و مختصات
+            { title: "جمع مختصاتی بردارها", icon: "fa-location-arrow", color: "cyan", formula: "\\begin{bmatrix} x_1 \\\\ y_1 \\end{bmatrix} + \\begin{bmatrix} x_2 \\\\ y_2 \\end{bmatrix} = \\begin{bmatrix} x_1 + x_2 \\\\ y_1 + y_2 \\end{bmatrix}", note: "طول با طول، عرض با عرض جمع می‌شود.", example: "\\begin{bmatrix} 2 \\\\ 3 \\end{bmatrix} + \\begin{bmatrix} -1 \\\\ 4 \\end{bmatrix} = \\begin{bmatrix} 1 \\\\ 7 \\end{bmatrix}" },
+            { title: "ضرب عدد در بردار", icon: "fa-expand-arrows-alt", color: "cyan", formula: "k \\begin{bmatrix} x \\\\ y \\end{bmatrix} = \\begin{bmatrix} kx \\\\ ky \\end{bmatrix}", note: "عدد در هر دو مؤلفه ضرب می‌شود.", example: "3 \\begin{bmatrix} 2 \\\\ -1 \\end{bmatrix} = \\begin{bmatrix} 6 \\\\ -3 \\end{bmatrix}" },
+            
+            // اعداد و آمار
+            { title: "رابطه ب.م.م و ک.م.م", icon: "fa-asterisk", color: "fuchsia", formula: "(a,b) \\times [a,b] = a \\times b", note: "ضرب ب.م.م و ک.م.م برابر ضرب دو عدد است.", example: "2 \\times 12 = 4 \\times 6" },
+            { title: "میانگین داده‌ها", icon: "fa-chart-bar", color: "fuchsia", formula: "\\bar{x} = \\frac{\\sum x_i}{n}", note: "مجموع داده‌ها تقسیم بر تعداد آن‌ها.", example: "\\frac{2+4+6}{3} = 4" },
+            { title: "احتمال یک پیشامد", icon: "fa-dice", color: "fuchsia", formula: "P(A) = \\frac{n(A)}{n(S)}", note: "تعداد حالات مطلوب تقسیم بر کل حالات ممکن.", example: "P = \\frac{1}{6}" }
+        ];
+
+        function renderFormulas(list) {
+            const grid = document.getElementById("formula-grid");
+            const msg = document.getElementById("no-formulas-msg");
+            
+            if(list.length === 0) {
+                grid.innerHTML = "";
+                msg.classList.remove("hidden");
+                msg.classList.add("flex");
+                return;
+            }
+
+            msg.classList.add("hidden");
+            msg.classList.remove("flex");
+
+            let html = "";
+            list.forEach(item => {
+                html += `
+                    <div class="border border-slate-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-slate-50 flex flex-col h-full">
+                        <div class="bg-${item.color}-600 text-white p-3 font-bold flex justify-between items-center text-sm shrink-0">
+                            <span>${item.title}</span>
+                            <i class="fas ${item.icon} opacity-50"></i>
+                        </div>
+                        <div class="p-5 flex flex-col flex-1">
+                            <div class="text-center mb-4 bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-center min-h-[60px]" dir="ltr">
+                                $$ ${item.formula} $$
+                            </div>
+                            <div class="text-sm mt-auto">
+                                <p class="font-bold text-slate-700 mb-1"><i class="fas fa-lightbulb text-amber-500"></i> راهنما:</p>
+                                <p class="text-slate-600 mb-3 text-justify text-xs">${item.note}</p>
+                                <p class="font-bold text-slate-700 mb-1"><i class="fas fa-pen text-blue-500"></i> مثال:</p>
+                                <p class="bg-white p-2 rounded border border-slate-200 text-center text-xs" dir="ltr">$$ ${item.example} $$</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+            renderMath('formula-grid'); // رندر هوشمند فرمول‌ها بعد از ایجاد محتوا
+        }
+
+        function filterFormulas() {
+            const term = document.getElementById('formula-search').value.toLowerCase().trim();
+            if(!term) {
+                renderFormulas(formulaBank);
+                return;
+            }
+            
+            const filtered = formulaBank.filter(f => 
+                f.title.toLowerCase().includes(term) || 
+                f.note.toLowerCase().includes(term) ||
+                f.formula.toLowerCase().includes(term)
+            );
+            
+            renderFormulas(filtered);
+        }
+
+     let selectedQuestionIds = [];
+
+function toggleQuestionSelection(id) {
+    const btn = event.target.closest('button');
+    if(selectedQuestionIds.includes(id)) {
+        selectedQuestionIds = selectedQuestionIds.filter(item => item !== id);
+        btn.innerHTML = '<i class="fas fa-plus"></i> افزودن به آزمون';
+        btn.classList.replace('bg-emerald-600', 'bg-blue-600');
+        showToast("سوال از لیست حذف شد", "info");
+    } else {
+        selectedQuestionIds.push(id);
+        btn.innerHTML = '<i class="fas fa-check"></i> اضافه شد';
+        btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+        showToast("سوال به لیست آزمون اضافه شد", "success");
+    }
+}
+// ۳. تابع خروجی گرفتن PDF
+function exportSelectedQuiz() {
+    if(selectedQuestionIds.length === 0) {
+        showToast("ابتدا حداقل یک سوال انتخاب کنید!", "error");
+        return;
+    }
+    
+    // فقط لینک را می‌سازیم و باز می‌کنیم
+    const ids = selectedQuestionIds.join(",");
+    const url = `${BACKEND_URL}/api/teacher/quizzes/export-html?quiz_ids=${ids}&include_answers=true&token=${token}`;
+    window.open(url, '_blank');
+}
+
+    </script>
+</body>
+</html>

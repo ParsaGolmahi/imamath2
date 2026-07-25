@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود به ایما | دستیار هوشمند ریاضی</title>
+    <link rel="icon" href="IMA.png" type="image/png">
+    
+    <!-- فونت وزیرمتن -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 24px;
+            padding: 45px 35px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-circle {
+            width: 85px;
+            height: 85px;
+            margin: 0 auto 18px;
+            background: linear-gradient(135deg, #4f46e5, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: brightness(1.2);
+        }
+        
+        .logo-section h2 {
+            color: #4f46e5;
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        
+        .logo-section p {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 13px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: white;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #6b7280;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border-color: #4f46e5;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.98rem;
+            transition: all 0.3s ease;
+            text-align: right;
+            direction: rtl;
+            background: white;
+            color: #1e293b;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .form-group select option {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+        }
+        
+        .submit-btn.login-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+        
+        .submit-btn.register-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .error-message {
+            display: none;
+            margin-top: 15px;
+            padding: 14px;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            color: #dc2626;
+            font-size: 0.9rem;
+            text-align: center;
+            animation: shake 0.4s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        
+        .guest-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #4f46e5;
+            text-decoration: none;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .guest-link:hover {
+            color: #7c3aed;
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ذرات پس‌زمینه -->
+    <div class="particles" id="particles"></div>
+
+    <!-- کانتینر لاگین -->
+    <div class="login-container" style="position: relative; z-index: 1;">
+        
+        <!-- لوگو -->
+        <div class="logo-section">
+            <div class="logo-circle">
+                <img src="IMA.png" alt="ایما">
+            </div>
+            <h2>ایما</h2>
+            <p>دستیار هوشمند ریاضی</p>
+        </div>
+        
+        <!-- تب‌ها -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" id="loginTab" onclick="switchTab('login')">
+                <i class="fas fa-sign-in-alt" style="margin-left:6px;"></i> ورود
+            </button>
+            <button class="tab-btn" id="registerTab" onclick="switchTab('register')">
+                <i class="fas fa-user-plus" style="margin-left:6px;"></i> ثبت‌نام
+            </button>
+        </div>
+        
+        <!-- فرم ورود -->
+        <div id="loginForm">
+            <div class="form-group">
+                <input type="text" id="loginUsername" placeholder="نام کاربری">
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="رمز عبور">
+            </div>
+            <button class="submit-btn login-btn" onclick="login()">
+                <span id="loginBtnText">ورود به ایما</span>
+                <div class="loading-spinner" id="loginSpinner"></div>
+            </button>
+        </div>
+        
+        <!-- فرم ثبت‌نام -->
+        <div id="registerForm" style="display: none;">
+            <div class="form-group">
+                <input type="text" id="regFullName" placeholder="نام کامل">
+            </div>
+            <div class="form-group">
+                <input type="email" id="regEmail" placeholder="ایمیل">
+            </div>
+            <div class="form-group">
+                <label for="register-role">نوع کاربری:</label>
+                <select id="register-role">
+                    <option value="student">👨‍🎓 دانش‌آموز</option>
+                    <option value="teacher">👨‍🏫 معلم / مدرس</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="text" id="regUsername" placeholder="نام کاربری">
+            </div>
+            <div class="form-group">
+                <input type="password" id="regPassword" placeholder="رمز عبور (حداقل ۶ کاراکتر)">
+            </div>
+            <button class="submit-btn register-btn" onclick="register()">
+                <span id="registerBtnText">ثبت‌نام</span>
+                <div class="loading-spinner" id="registerSpinner"></div>
+            </button>
+        </div>
+        
+        <!-- پیام خطا -->
+        <div class="error-message" id="errorMessage"></div>
+        
+        <!-- مهمان -->
+        <a class="guest-link" onclick="continueAsGuest()">
+            <i class="fas fa-user" style="margin-left:6px;"></i> ادامه به عنوان مهمان
+        </a>
+    </div>
+
+<script>
+    const BACKEND_URL = "http://localhost:8000";
+    
+    // ۱. ایجاد انیمیشن ذرات پس‌زمینه
+    function createParticles() {
+        const container = document.getElementById("particles");
+        if (!container) return;
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement("div");
+            particle.className = "particle";
+            const size = Math.random() * 8 + 3;
+            particle.style.width = size + "px";
+            particle.style.height = size + "px";
+            particle.style.left = Math.random() * 100 + "%";
+            particle.style.animationDelay = Math.random() * 15 + "s";
+            particle.style.animationDuration = Math.random() * 10 + 10 + "s";
+            container.appendChild(particle);
+        }
+    }
+    
+    // ۲. نمایش خطاهای سیستم به صورت موقت
+    function showError(msg) {
+        const err = document.getElementById("errorMessage");
+        if (!err) return;
+        err.textContent = msg;
+        err.style.display = "block";
+        setTimeout(() => { err.style.display = "none"; }, 4000);
+    }
+    
+    // ۳. مدیریت وضعیت لودینگ دکمه‌ها
+    function setLoading(btnId, spinnerId, loading) {
+        const btn = document.getElementById(btnId);
+        const spinner = document.getElementById(spinnerId);
+        if (btn) btn.style.display = loading ? "none" : "inline";
+        if (spinner) spinner.style.display = loading ? "inline-block" : "none";
+    }
+    
+    // ۴. سوئیچ کردن بین فرم ورود و ثبت‌نام
+    function switchTab(tab) {
+        document.getElementById("loginTab").classList.toggle("active", tab === "login");
+        document.getElementById("registerTab").classList.toggle("active", tab === "register");
+        document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
+        document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
+        document.getElementById("errorMessage").style.display = "none";
+    }
+    
+    // ۵. مدیریت سابمیت فرم‌ها با کلید Enter
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            if (document.getElementById("loginForm").style.display !== "none") {
+                login();
+            } else {
+                register();
+            }
+        }
+    });
+    
+    // 🔐 ۶. تابع ورود کاربر (Login)
+    async function login() {
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+        
+        if (!username || !password) {
+            showError("لطفاً نام کاربری و رمز عبور را وارد کنید");
+            return;
+        }
+        
+        setLoading("loginBtnText", "loginSpinner", true);
+        
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                // ذخیره اطلاعات کاربری در مرورگر
+                localStorage.setItem("ima_token", data.access_token);
+                localStorage.setItem("ima_user", JSON.stringify(data.user));
+                
+                // 🔀 هدایت هوشمند بر اساس نقش (Role)
+                if (data.user.role === "teacher" || data.user.role === "admin") {
+                    window.location.href = "teacher.html";
+                } else {
+                    window.location.href = "ima.html";
+                }
+            } else {
+                showError(data.detail || "نام کاربری یا رمز عبور اشتباه است");
+            }
+        } catch (err) {
+            showError("خطا در اتصال به سرور. آیا سرور اجراست؟");
+        } finally {
+            setLoading("loginBtnText", "loginSpinner", false);
+        }
+    }
+    
+    // 📝 ۷. تابع ثبت‌نام کاربر جدید (Register)
+    async function register() {
+        const fullName = document.getElementById("regFullName").value.trim();
+        const email = document.getElementById("regEmail").value.trim();
+        const username = document.getElementById("regUsername").value.trim();
+        const password = document.getElementById("regPassword").value.trim();
+        
+        // دریافت نقش انتخاب شده از منوی افتادنی فرم ثبت نام
+        const roleSelect = document.getElementById("register-role");
+        const role = roleSelect ? roleSelect.value : "student";
+        
+        if (!fullName || !email || !username || !password) {
+            showError("لطفاً تمام فیلدها را پر کنید");
+            return;
+        }
+        
+        if (password.length < 6) {
+            showError("رمز عبور باید حداقل ۶ کاراکتر باشد");
+            return;
+        }
+        
+        setLoading("registerBtnText", "registerSpinner", true);
+        
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    full_name: fullName,
+                    password: password,
+                    role: role // پاس دادن نقش به مدل Pydantic بک‌باند
+                })
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                localStorage.setItem("ima_token", data.access_token);
+                localStorage.setItem("ima_user", JSON.stringify(data.user));
+                
+                // 🔀 هدایت هوشمند بلافاصله پس از ثبت نام موفق
+                if (data.user.role === "teacher" || data.user.role === "admin") {
+                    window.location.href = "teacher.html";
+                } else {
+                    window.location.href = "ima.html";
+                }
+            } else {
+                showError(data.detail || "خطا در ثبت‌نام");
+            }
+        } catch (err) {
+            showError("خطا در اتصال به سرور");
+        } finally {
+            setLoading("registerBtnText", "registerSpinner", false);
+        }
+    }
+    
+    // 👤 ۸. ورود به عنوان کاربر مهمان
+    function continueAsGuest() {
+        localStorage.removeItem("ima_token");
+        localStorage.setItem("ima_user", JSON.stringify({
+            username: "guest",
+            full_name: "کاربر مهمان",
+            role: "guest"
+        }));
+        window.location.href = "ima.html";
+    }
+    
+    // اجرا در هنگام لود صفحه
+    createParticles();
+</script>
+</body>
+</html>
